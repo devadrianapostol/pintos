@@ -14,10 +14,19 @@ test_priority_change (void)
 {
   /* This test does not work with the MLFQS. */
   ASSERT (!thread_mlfqs);
+struct thread* cur = thread_current();
+printf("MainName1:%s\n", cur->name);
+printf("MainPriority1:%d\n", cur->priority);
   msg ("Creating a high-priority thread 2.");
   thread_create ("thread 2", PRI_DEFAULT + 1, changing_thread, NULL);
+cur = thread_current();
+printf("MainName2:%s\n", cur->name);
+printf("MainPriority2:%d\n", cur->priority);
   msg ("Thread 2 should have just lowered its priority.");
   thread_set_priority (PRI_DEFAULT - 2);
+cur = thread_current();
+printf("MainName3:%s\n", cur->name);
+printf("MainPriority3:%d\n", cur->priority);
   msg ("Thread 2 should have just exited.");
 	
 }
@@ -25,7 +34,13 @@ test_priority_change (void)
 static void
 changing_thread (void *aux UNUSED) 
 {
+struct thread* cur = thread_current();
+printf("ThreadName1:%s\n", cur->name);
+printf("ThreadPriority1:%d\n", cur->priority);
   msg ("Thread 2 now lowering priority.");
   thread_set_priority (PRI_DEFAULT - 1);
+cur = thread_current();
+printf("ThreadName2:%s\n", cur->name);
+printf("ThreadPriority2:%d\n", cur->priority);
   msg ("Thread 2 exiting.");
 }

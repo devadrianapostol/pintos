@@ -135,7 +135,6 @@ void
 thread_tick (void) 
 {
   struct thread *t = thread_current ();
-
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -220,7 +219,6 @@ thread_create (const char *name, int priority,
   t->block_ticks = 0;
   /* Add to run queue. */
   thread_unblock (t);
-
   return tid;
 }
 
@@ -254,7 +252,6 @@ thread_unblock (struct thread *t)
   enum intr_level old_level;
 
   ASSERT (is_thread (t));
-
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
   // list_push_back (&ready_list, &t->elem);
@@ -358,6 +355,12 @@ void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
+  if(!list_empty(&ready_list)) {
+    struct thread* front =list_entry (list_front (&ready_list), struct thread, elem);
+    if (front->priority > new_priority) {
+      thread_yield();
+    }
+  }
 }
 
 /* Returns the current thread's priority. */
@@ -510,8 +513,13 @@ next_thread_to_run (void)
 {
   if (list_empty (&ready_list))
     return idle_thread;
-  else
+  else {
+    bool list_less_func(struct list_elem* a, struct list_elem* b, void *aux) {
+      return list_entry(a,struct thread, elem)->priority > list_entry(b,struct thread ,elem)->priority;
+    }
+    list_sort(&ready_list,&list_less_func,NULL);
     return list_entry (list_pop_front (&ready_list), struct thread, elem);
+  }
 }
 
 /* Completes a thread switch by activating the new thread's page
