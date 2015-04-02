@@ -35,7 +35,7 @@ void block_check(struct thread* t, void* aux) {
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
 static struct list ready_list;
-
+static struct lock* set_priority_lock;
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
@@ -358,7 +358,17 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+  if (set_priority_lock == NULL) {
+    set_priority_lock = (struct lock*)malloc(sizeof(struct lock));
+    lock_init(set_priority_lock);
+    lock_acquire(set_priority_lock);
+  } else {
+    while(!lock_try_acquire(set_priority_lock)) {
+      thread_yield();
+    }
+  }
   thread_current ()->priority = new_priority;
+  lock_release(set_priority_lock);
   if(!list_empty(&ready_list)) {
     struct thread* front =list_entry (list_front (&ready_list), struct thread, elem);
     if (front->priority > new_priority) {
