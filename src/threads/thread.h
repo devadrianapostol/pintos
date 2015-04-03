@@ -4,7 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
-static bool cmp(const struct list_elem*, const struct list_elem*, void*);
+bool high_priority(const struct list_elem*, const struct list_elem*, void*);
 struct sortNumber {
   int number;
   struct list_elem elem;
