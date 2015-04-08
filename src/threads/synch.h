@@ -3,7 +3,14 @@
 
 #include <list.h>
 #include <stdbool.h>
-
+/*donator and acceptor  agreement*/
+struct donation_agreement {
+  struct thread* donator;
+  struct thread* acceptor;
+  int donator_origin_priority;
+  int acceptor_origin_priority;
+  struct list_elem agreement_elem;
+}
 /* A counting semaphore. */
 struct semaphore 
   {
@@ -22,6 +29,7 @@ struct lock
   {
     struct thread *holder;      /* Thread holding lock (for debugging). */
     struct semaphore semaphore; /* Binary semaphore controlling access. */
+    
   };
 
 void lock_init (struct lock *);
