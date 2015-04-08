@@ -355,23 +355,16 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  if (set_priority_lock == NULL) {
-    set_priority_lock = (struct lock*)malloc(sizeof(struct lock));
-    lock_init(set_priority_lock);
-    lock_acquire(set_priority_lock);
-  } else {
-    while(!lock_try_acquire(set_priority_lock)) {
-      thread_yield();
-    }
-  }
+  enum intr_level old_level;
+  old_level = intr_disable();
   thread_current ()->priority = new_priority;
-  lock_release(set_priority_lock);
   if(!list_empty(&ready_list)) {
     struct thread* front =list_entry (list_front (&ready_list), struct thread, elem);
     if (front->priority > new_priority) {
       thread_yield();
     }
   }
+  intr_set_level(old_level);
 }
 
 /* Returns the current thread's priority. */
@@ -525,10 +518,6 @@ next_thread_to_run (void)
   if (list_empty (&ready_list))
     return idle_thread;
   else {
-    bool list_less_func(struct list_elem* a, struct list_elem* b, void *aux) {
-      return list_entry(a,struct thread, elem)->priority > list_entry(b,struct thread ,elem)->priority;
-    }
-    list_sort(&ready_list,&list_less_func,NULL);
     return list_entry (list_pop_front (&ready_list), struct thread, elem);
   }
 }
