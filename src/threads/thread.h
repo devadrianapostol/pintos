@@ -143,4 +143,5 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 /*block_check function*/
 void block_check(struct thread*, void*);
+void thread_insert_order(struct thread*);
 #endif /* threads/thread.h */

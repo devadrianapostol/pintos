@@ -38,6 +38,14 @@ void donation_agreement_init(struct donation_agreement* agreement, struct thread
   agreement->donator_origin_priority = donator_origin_priority;
   agreement->acceptor_origin_priority = acceptor_origin_priority;
 }
+void implement_agreement(struct donation_agreement* agreement) {
+  agreement->donator->priority =  agreement->donator_origin_priority;
+  struct thread* donator = agreement->donator;
+  list_remove(&donator->elem);
+  thread_insert_order(donator);
+  agreement->acceptor->priority = agreement->acceptor_origin_priority;
+}
+  
 /* Initializes semaphore SEMA to VALUE.  A semaphore is a
    nonnegative integer along with two atomic operators for
    manipulating it:
@@ -186,6 +194,7 @@ lock_init (struct lock *lock)
 
   lock->holder = NULL;
   sema_init (&lock->semaphore, 1);
+  list_init(&lock->agreements_list);
 }
 
 /* Acquires LOCK, sleeping until it becomes available if
@@ -202,11 +211,30 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
-
-  sema_down (&lock->semaphore);
-  lock->holder = thread_current ();
+  enum intr_level  old_level;
+  old_level = intr_disable();
+  if (lock->semaphore.value <= 0) {
+    struct thread* donator = thread_current();
+    struct thread* acceptor = lock->holder;
+    if (donator->priority > acceptor->priority) {
+    struct donation_agreement* agreement = (struct donation_agreement*)malloc(sizeof(struct donation_agreement));
+    donation_agreement_init(agreement, donator, acceptor, donator->priority, acceptor->priority);
+    list_push_back(&lock->agreements_list, &agreement->elem);
+    swap_priority( &(donator->priority),  &(acceptor->priority));
+    }
+    sema_down (&lock->semaphore);
+    lock->holder = thread_current ();
+  } else {
+    sema_down (&lock->semaphore);
+    lock->holder = thread_current ();
+  }
+  intr_set_level(old_level);
 }
-
+void swap_priority(int* a, int*  b) {
+  int temp = *a;
+  *a = *b;
+  *b = temp;
+}
 /* Tries to acquires LOCK and returns true if successful or false
    on failure.  The lock must not already be held by the current
    thread.
@@ -237,9 +265,19 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-
+  struct list_elem *e;
+  for(e = list_begin(&lock->agreements_list) ; e != list_end(&lock->agreements_list) ; ) {
+    struct donation_agreement *agreement = list_entry (e, struct donation_agreement, elem);
+    if (agreement->acceptor == thread_current()) {
+	implement_agreement(agreement);
+	 e = list_remove(&agreement->elem);
+    } else {
+      e = list_next(e);
+    }
+  }
   lock->holder = NULL;
   sema_up (&lock->semaphore);
+  thread_yield();
 }
 
 /* Returns true if the current thread holds LOCK, false
