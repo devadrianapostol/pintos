@@ -45,7 +45,6 @@ struct donation_agreement*  contract_agreement(struct thread* donator, struct th
   return agreement;
 }
 void implement_agreement(struct donation_agreement* agreement) {
-  printf("------>%d\n",agreement->donation_priority); 
   struct thread* acceptor = agreement->acceptor;
   -- acceptor->agreements_num;
   if (acceptor->agreements_num == 0) {
@@ -223,11 +222,13 @@ lock_acquire (struct lock *lock)
   ASSERT (!lock_held_by_current_thread (lock));
   enum intr_level  old_level;
   old_level = intr_disable();
-  if (lock->semaphore.value <= 0 && thread_current()->priority > lock->holder->priority) {
+  if (lock->semaphore.value <= 0) {
     struct thread* donator = thread_current();
     struct thread* acceptor = lock->holder;
-    struct donation_agreement* agreement = contract_agreement(donator, acceptor);
-    list_push_back(&lock->agreements, agreement);
+    if (donator->priority > acceptor->priority) {
+      struct donation_agreement* agreement = contract_agreement(donator, acceptor);
+      list_push_back(&lock->agreements, &agreement->elem);
+    }
   }
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
@@ -267,7 +268,7 @@ lock_release (struct lock *lock)
   for(e = list_begin(&lock->agreements) ; e != list_end(&lock->agreements) ; ) {
     struct donation_agreement *agreement = list_entry (e, struct donation_agreement, elem);
     if (agreement->acceptor == thread_current()) {
-      implement_agreement(&agreement);
+      implement_agreement(agreement);
       e = list_remove(&agreement->elem);
     } else {
       e = list_next(e);
