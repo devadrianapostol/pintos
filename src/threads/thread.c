@@ -367,7 +367,11 @@ thread_set_priority (int new_priority)
 {
   enum intr_level old_level;
   old_level = intr_disable();
-  thread_current ()->priority = new_priority;
+  if (thread_current()->agreements_num > 0 && thread_get_priority() > new_priority) {
+    thread_current()->real_priority = new_priority;
+  } else {
+    thread_current ()->priority = new_priority;
+  }
   if(!list_empty(&ready_list)) {
     struct thread* front =list_entry (list_front (&ready_list), struct thread, elem);
     if (front->priority > new_priority) {

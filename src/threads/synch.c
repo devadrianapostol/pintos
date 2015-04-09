@@ -44,7 +44,7 @@ void recur_contract_agreement(struct lock* block_reason, struct thread* donator,
   acceptor->priority = donator->priority;
   ++acceptor->agreements_num;
   list_push_back(&block_reason->agreements, &agreement->elem);
-  if (acceptor->status ==  THREAD_BLOCKED) {
+  if (acceptor->status ==  THREAD_BLOCKED && acceptor->block_reason && acceptor->block_reason->holder) {
     recur_contract_agreement(acceptor->block_reason, acceptor, acceptor->block_reason->holder);
   }
 }
