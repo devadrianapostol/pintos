@@ -106,6 +106,7 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
     int agreements_num;
     int real_priority;
+    struct lock* block_reason;
   };
 
 /* If false (default), use round-robin scheduler.

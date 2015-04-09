@@ -221,6 +221,7 @@ thread_create (const char *name, int priority,
   t->block_ticks = 0;
   t->agreements_num = 0;
   t->real_priority = priority;
+  t->block_reason = NULL;
   /* Add to run queue. */
   thread_unblock (t);
   struct thread* cur =  thread_current();

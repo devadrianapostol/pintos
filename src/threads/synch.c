@@ -32,6 +32,24 @@
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 /* initializes donation agreement*/
+void recur_contract_agreement(struct lock* block_reason, struct thread* donator, struct thread* acceptor) {
+  if (donator->priority <= acceptor->priority) return;
+  struct donation_agreement* agreement = (struct donation_agreement*)malloc(sizeof(struct donation_agreement));
+  agreement->acceptor = acceptor;
+  agreement-> donation_priority = donator->priority;
+  agreement->origin_priority = acceptor->priority;
+  if (acceptor->agreements_num == 0) {
+    acceptor->real_priority = acceptor->priority;
+  }
+  acceptor->priority = donator->priority;
+  ++acceptor->agreements_num;
+  list_push_back(&block_reason->agreements, &agreement->elem);
+  if (acceptor->status ==  THREAD_BLOCKED) {
+    recur_contract_agreement(acceptor->block_reason, acceptor, acceptor->block_reason->holder);
+  }
+}
+
+/* initializes donation agreement*/
 struct donation_agreement*  contract_agreement(struct thread* donator, struct thread* acceptor) {
   struct donation_agreement* agreement = (struct donation_agreement*)malloc(sizeof(struct donation_agreement));
   agreement->acceptor = acceptor;
@@ -225,10 +243,8 @@ lock_acquire (struct lock *lock)
   if (lock->semaphore.value <= 0) {
     struct thread* donator = thread_current();
     struct thread* acceptor = lock->holder;
-    if (donator->priority > acceptor->priority) {
-      struct donation_agreement* agreement = contract_agreement(donator, acceptor);
-      list_push_back(&lock->agreements, &agreement->elem);
-    }
+    donator->block_reason = lock;
+    recur_contract_agreement(lock, donator, acceptor);
   }
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();

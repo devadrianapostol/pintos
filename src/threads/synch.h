@@ -33,7 +33,7 @@ struct lock
     struct semaphore semaphore; /* Binary semaphore controlling access. */
     struct list agreements;
   };
-
+void recur_contract_agreement(struct lock* block_reason, struct thread* donator, struct thread* acceptor);
 void lock_init (struct lock *);
 void lock_acquire (struct lock *);
 bool lock_try_acquire (struct lock *);
