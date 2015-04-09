@@ -104,7 +104,7 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
-    int agreement_num;
+    int agreements_num;
     int real_priority;
   };
 

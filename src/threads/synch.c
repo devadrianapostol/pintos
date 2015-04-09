@@ -38,16 +38,16 @@ struct donation_agreement*  contract_agreement(struct thread* donator, struct th
   agreement-> donation_priority = donator->priority;
   agreement->origin_priority = acceptor->priority;
   acceptor->priority = donator->priority;
-  if (acceptor->agreement_num == 0) {
-    acceptor->origin_priority = acceptor->priority;
+  if (acceptor->agreements_num == 0) {
+    acceptor->real_priority = acceptor->priority;
   }
-  ++acceptor->agreement_num;
+  ++acceptor->agreements_num;
   return agreement;
 }
 void implement_agreement(struct donation_agreement* agreement) {
   struct thread* acceptor = agreement->acceptor;
-  -- acceptor->agreement_num;
-  if (acceptor->greement_num == 0) {
+  -- acceptor->agreements_num;
+  if (acceptor->agreements_num == 0) {
     acceptor->priority = acceptor->real_priority;
   } else if (acceptor->priority == agreement->donation_priority) {
     acceptor->priority = agreement->origin_priority;
@@ -142,7 +142,7 @@ sema_up (struct semaphore *sema)
                                 struct thread, elem));
   sema->value++;
   struct list_elem *e;
-  for(e = list_begin(&sema->agreements_list) ; e != list_end(&seam->agreements_list) ; ) {
+  for(e = list_begin(&sema->agreements_list) ; e != list_end(&sema->agreements_list) ; ) {
     struct donation_agreement *agreement = list_entry (e, struct donation_agreement, elem);
     if (agreement->acceptor == thread_current()) {
       implement_agreement(agreement);
@@ -213,7 +213,6 @@ lock_init (struct lock *lock)
 
   lock->holder = NULL;
   sema_init (&lock->semaphore, 1);
-  list_init(&lock->agreements_list);
 }
 
 /* Acquires LOCK, sleeping until it becomes available if
