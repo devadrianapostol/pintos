@@ -105,7 +105,7 @@ struct thread
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
     int agreement_num;
-    int origin_priority;
+    int real_priority;
   };
 
 /* If false (default), use round-robin scheduler.

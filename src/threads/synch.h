@@ -5,10 +5,9 @@
 #include <stdbool.h>
 /*donator and acceptor  agreement*/
 struct donation_agreement {
-  struct thread* donator;
   struct thread* acceptor;
-  int donator_origin_priority;
-  int acceptor_origin_priority;
+  int donation_priority;
+  int origin_priority;
   struct list_elem elem;
 };
 /* A counting semaphore. */
@@ -16,8 +15,10 @@ struct semaphore
   {
     unsigned value;             /* Current value. */
     struct list waiters;        /* List of waiting threads. */
+    struct list agreements_list;
+    struct list holders_list;
   };
-void donation_agreement_init(struct donation_agreement* agreement, struct thread* donator, struct thread* acceptor, int donator_origin_priority, int acceptor_origin_priority);
+struct donation_agreement*  contract_agreement(struct thread* donator, struct thread* acceptor);
 void implement_agreement(struct donation_agreement* agreement);
 void sema_init (struct semaphore *, unsigned value);
 void sema_down (struct semaphore *);
@@ -30,8 +31,6 @@ struct lock
   {
     struct thread *holder;      /* Thread holding lock (for debugging). */
     struct semaphore semaphore; /* Binary semaphore controlling access. */
-    struct list agreements_list;
-    
   };
 
 void lock_init (struct lock *);
