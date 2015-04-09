@@ -226,10 +226,10 @@ lock_acquire (struct lock *lock)
 	acceptor->origin_priority = acceptor->priority;
       }
       struct donation_agreement* agreement = (struct donation_agreement*)malloc(sizeof(struct donation_agreement));
-    donation_agreement_init(agreement, donator, acceptor, donator->priority, acceptor->priority);
-    list_push_back(&lock->agreements_list, &agreement->elem);
-    swap_priority( &(donator->priority),  &(acceptor->priority));
-    ++acceptor->agreement_num;
+      donation_agreement_init(agreement, donator, acceptor, donator->priority, acceptor->priority);
+      list_push_back(&lock->agreements_list, &agreement->elem);
+      swap_priority( &(donator->priority),  &(acceptor->priority));
+      ++acceptor->agreement_num;
     }
     sema_down (&lock->semaphore);
     lock->holder = thread_current ();
