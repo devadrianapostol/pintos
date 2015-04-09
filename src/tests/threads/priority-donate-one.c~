@@ -40,7 +40,6 @@ test_priority_donate_one (void)
   lock_release (&lock);
   msg ("acquire2, acquire1 must already have finished, in that order.");
   msg ("This should be the last line before finishing this test.");
-printf("%d\n", thread_current()->priority);
 }
 
 static void

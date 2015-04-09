@@ -15,8 +15,8 @@ struct semaphore
   {
     unsigned value;             /* Current value. */
     struct list waiters;        /* List of waiting threads. */
-    struct list agreements_list;
-    struct list holders_list;
+    struct list agreements;
+    struct list holders;
   };
 struct donation_agreement*  contract_agreement(struct thread* donator, struct thread* acceptor);
 void implement_agreement(struct donation_agreement* agreement);
@@ -31,6 +31,7 @@ struct lock
   {
     struct thread *holder;      /* Thread holding lock (for debugging). */
     struct semaphore semaphore; /* Binary semaphore controlling access. */
+    struct list agreements;
   };
 
 void lock_init (struct lock *);
