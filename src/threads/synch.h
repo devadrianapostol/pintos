@@ -15,10 +15,7 @@ struct semaphore
   {
     unsigned value;             /* Current value. */
     struct list waiters;        /* List of waiting threads. */
-    struct list agreements;
-    struct list holders;
   };
-struct donation_agreement*  contract_agreement(struct thread* donator, struct thread* acceptor);
 void implement_agreement(struct donation_agreement* agreement);
 void sema_init (struct semaphore *, unsigned value);
 void sema_down (struct semaphore *);

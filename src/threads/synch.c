@@ -31,7 +31,7 @@
 #include <string.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
-/* initializes donation agreement*/
+/* recursive contract  donation agreement*/
 void recur_contract_agreement(struct lock* block_reason, struct thread* donator, struct thread* acceptor) {
   if (donator->priority <= acceptor->priority) return;
   struct donation_agreement* agreement = (struct donation_agreement*)malloc(sizeof(struct donation_agreement));
@@ -49,19 +49,7 @@ void recur_contract_agreement(struct lock* block_reason, struct thread* donator,
   }
 }
 
-/* initializes donation agreement*/
-struct donation_agreement*  contract_agreement(struct thread* donator, struct thread* acceptor) {
-  struct donation_agreement* agreement = (struct donation_agreement*)malloc(sizeof(struct donation_agreement));
-  agreement->acceptor = acceptor;
-  agreement-> donation_priority = donator->priority;
-  agreement->origin_priority = acceptor->priority;
-  if (acceptor->agreements_num == 0) {
-    acceptor->real_priority = acceptor->priority;
-  }
-  acceptor->priority = donator->priority;
-  ++acceptor->agreements_num;
-  return agreement;
-}
+/* implement agreements to return acceptor's origin priority */
 void implement_agreement(struct donation_agreement* agreement) {
   struct thread* acceptor = agreement->acceptor;
   -- acceptor->agreements_num;
@@ -88,8 +76,6 @@ sema_init (struct semaphore *sema, unsigned value)
 
   sema->value = value;
   list_init (&sema->waiters);
-  list_init(&sema->holders);
-  list_init(&sema->agreements);
 }
 
 /* Down or "P" operation on a semaphore.  Waits for SEMA's value
@@ -142,12 +128,6 @@ sema_try_down (struct semaphore *sema)
 
   return success;
 }
-void thread_sort(struct list* thread_list) {
-  bool list_less_func(struct list_elem* a, struct list_elem* b, void *aux) {
-    return list_entry(a,struct thread,elem)->priority > list_entry(b,struct thread,elem)->priority;
-  }
-  list_sort(thread_list,&list_less_func,NULL);
-}
 /* Up or "V" operation on a semaphore.  Increments SEMA's value
    and wakes up one thread of those waiting for SEMA, if any.
 
@@ -161,7 +141,7 @@ sema_up (struct semaphore *sema)
 
   old_level = intr_disable ();
   if (!list_empty (&sema->waiters)) {
-    thread_sort(&sema->waiters);
+     thread_sort_by_high_priority(&sema->waiters);
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
                                 struct thread, elem));
   }

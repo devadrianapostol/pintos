@@ -5,6 +5,7 @@
 #include <list.h>
 #include <stdint.h>
 bool high_priority(const struct list_elem*, const struct list_elem*, void*);
+void thread_sort_by_high_priority(struct list* thread_list);
 struct sortNumber {
   int number;
   struct list_elem elem;

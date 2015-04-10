@@ -19,6 +19,7 @@ bool high_priority (const struct list_elem* a, const struct list_elem* b, void *
   return (list_entry(a, struct thread, elem)->priority >
 	  list_entry(b, struct thread, elem)->priority);
 }
+/* check the block thread to unblock it */
 void block_check(struct thread* t, void* aux) {
   if (t->status == THREAD_BLOCKED && t->block_ticks > 0) {
     t->block_ticks --;
@@ -26,6 +27,13 @@ void block_check(struct thread* t, void* aux) {
       thread_unblock(t);
     }
   }
+}
+/* sort a thread list by high priority*/
+void thread_sort_by_high_priority(struct list* thread_list) {
+  bool list_less_func(struct list_elem* a, struct list_elem* b, void *aux) {
+    return list_entry(a,struct thread,elem)->priority > list_entry(b,struct thread,elem)->priority;
+  }
+  list_sort(thread_list,&list_less_func,NULL);
 }
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
@@ -367,9 +375,10 @@ thread_set_priority (int new_priority)
 {
   enum intr_level old_level;
   old_level = intr_disable();
-  if (thread_current()->agreements_num > 0 && thread_get_priority() > new_priority) {
-    thread_current()->real_priority = new_priority;
-  } else {
+  thread_current()->real_priority = new_priority;
+  if (thread_current()->agreements_num ==  0) {
+    thread_current ()->priority = new_priority;
+  } else if (thread_get_priority() < new_priority) {
     thread_current ()->priority = new_priority;
   }
   if(!list_empty(&ready_list)) {
