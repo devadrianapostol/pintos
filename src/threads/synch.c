@@ -142,7 +142,12 @@ sema_try_down (struct semaphore *sema)
 
   return success;
 }
-
+void thread_sort(struct list* thread_list) {
+  bool list_less_func(struct list_elem* a, struct list_elem* b, void *aux) {
+    return list_entry(a,struct thread,elem)->priority > list_entry(b,struct thread,elem)->priority;
+  }
+  list_sort(thread_list,&list_less_func,NULL);
+}
 /* Up or "V" operation on a semaphore.  Increments SEMA's value
    and wakes up one thread of those waiting for SEMA, if any.
 
@@ -155,10 +160,13 @@ sema_up (struct semaphore *sema)
   ASSERT (sema != NULL);
 
   old_level = intr_disable ();
-  if (!list_empty (&sema->waiters)) 
+  if (!list_empty (&sema->waiters)) {
+    thread_sort(&sema->waiters);
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
                                 struct thread, elem));
+  }
   sema->value++;
+  thread_yield();
   intr_set_level (old_level);
 }
 
@@ -292,7 +300,6 @@ lock_release (struct lock *lock)
   }
   lock->holder = NULL;
   sema_up (&lock->semaphore);
-  thread_yield();
 }
 
 /* Returns true if the current thread holds LOCK, false
