@@ -108,6 +108,9 @@ struct thread
     int agreements_num;
     int real_priority;
     struct lock* block_reason;
+    /* use fo FreeBSD scheduling */
+    int nice;
+    int recent_cpu;
   };
 
 /* If false (default), use round-robin scheduler.
