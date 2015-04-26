@@ -7,8 +7,9 @@
 #include "threads/interrupt.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
-/* See [8254] for hardware details of the 8254 timer chip. */
+// Used for BSD scheduler
 #define RECALC_FREQ 4
+/* See [8254] for hardware details of the 8254 timer chip. */
 #if TIMER_FREQ < 19
 #error 8254 timer requires TIMER_FREQ >= 19
 #endif
@@ -181,6 +182,16 @@ timer_interrupt (struct intr_frame *args UNUSED)
   thread_foreach(block_check, NULL);
   intr_set_level(old_level);
   thread_tick ();
+  if (thread_mlfqs) {
+    thread_recent_cpu_increment();
+    if (ticks % TIMER_FREQ == 0) {
+      refresh_load_avg();
+      refresh_all_thread_priority_and_recent_cpu();
+    }
+    if (ticks % RECALC_FREQ == 0) {
+      refresh_thread_priority(thread_current());
+    }
+  }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

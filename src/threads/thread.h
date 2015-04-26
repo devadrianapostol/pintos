@@ -151,4 +151,10 @@ int thread_get_load_avg (void);
 /*block_check function*/
 void block_check(struct thread*, void*);
 void thread_insert_order(struct thread*);
+void thread_recent_cpu_increment();
+void  refresh_load_avg();
+void refresh_all_thread_priority_and_recent_cpu();
+void refresh_thread_recent_cpu(struct thread*);
+void refresh_thread_priority(struct thread*);
+void judge_max_priority();
 #endif /* threads/thread.h */
