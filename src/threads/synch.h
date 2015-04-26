@@ -31,11 +31,18 @@ struct lock
     struct list agreements;
   };
 void recur_contract_agreement(struct lock* block_reason, struct thread* donator, struct thread* acceptor);
+bool sema_cmp_high_priority(const struct list_elem* a, const struct list_elem* b, void* aux);
 void lock_init (struct lock *);
 void lock_acquire (struct lock *);
 bool lock_try_acquire (struct lock *);
 void lock_release (struct lock *);
 bool lock_held_by_current_thread (const struct lock *);
+/* One semaphore in a list. */
+struct semaphore_elem 
+  {
+    struct list_elem elem;              /* List element. */
+    struct semaphore semaphore;         /* This semaphore. */
+  };
 
 /* Condition variable. */
 struct condition 
@@ -47,7 +54,6 @@ void cond_init (struct condition *);
 void cond_wait (struct condition *, struct lock *);
 void cond_signal (struct condition *, struct lock *);
 void cond_broadcast (struct condition *, struct lock *);
-
 /* Optimization barrier.
 
    The compiler will not reorder operations across an
