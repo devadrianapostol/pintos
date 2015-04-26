@@ -157,4 +157,5 @@ void refresh_all_thread_priority_and_recent_cpu();
 void refresh_thread_recent_cpu(struct thread*);
 void refresh_thread_priority(struct thread*);
 void judge_max_priority();
+void test_max_priority (void);
 #endif /* threads/thread.h */

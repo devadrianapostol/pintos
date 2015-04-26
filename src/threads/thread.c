@@ -239,10 +239,7 @@ thread_create (const char *name, int priority,
   t->block_reason = NULL;
   /* Add to run queue. */
   thread_unblock (t);
-  struct thread* cur =  thread_current();
-  if (t->priority > cur->priority) {
-    thread_yield();
-  }
+  thread_yield();
   return tid;
 }
 
@@ -699,9 +696,32 @@ void refresh_thread_priority(struct thread* this_thread) {
   }
 }
 void judge_max_priority() {
-   thread_sort_by_high_priority(&ready_list);
    struct thread* thread_head = list_entry(list_front(&ready_list),  struct thread, elem);
    if (thread_current()->priority < thread_head->priority) {
      thread_yield();
    }
+}
+void test_max_priority (void)
+{
+  if ( list_empty(&ready_list) )
+    {
+      return;
+    }
+  struct thread *t = list_entry(list_front(&ready_list),
+				struct thread, elem);
+  if (intr_context())
+    {
+      thread_ticks++;
+      if ( thread_current()->priority < t->priority ||
+	   (thread_ticks >= TIME_SLICE &&
+	    thread_current()->priority == t->priority) )
+	{
+	  intr_yield_on_return();
+	}
+      return;
+    }
+  if (thread_current()->priority < t->priority)
+    {
+      thread_yield();
+    }
 }
