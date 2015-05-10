@@ -696,3 +696,33 @@ void refresh_thread_priority(struct thread* this_thread) {
     this_thread->priority = PRI_MAX;
   }
 }
+void judge_max_priority() {
+   struct thread* thread_head = list_entry(list_front(&ready_list),  struct thread, elem);
+   if (thread_current()->priority < thread_head->priority) {
+     thread_yield();
+   }
+}
+void test_max_priority (void)
+{
+  if ( list_empty(&ready_list) )
+    {
+      return;
+    }
+  struct thread *t = list_entry(list_front(&ready_list),
+				struct thread, elem);
+  if (intr_context())
+    {
+      thread_ticks++;
+      if ( thread_current()->priority < t->priority ||
+	   (thread_ticks >= TIME_SLICE &&
+	    thread_current()->priority == t->priority) )
+	{
+	  intr_yield_on_return();
+	}
+      return;
+    }
+  if (thread_current()->priority < t->priority)
+    {
+      thread_yield();
+    }
+}
